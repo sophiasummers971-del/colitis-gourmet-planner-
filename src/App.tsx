@@ -12,19 +12,30 @@ function App() {
   const { healthMode } = useApp();
 
   return (
-    <div className={`min-h-screen pb-24 transition-colors duration-500 ${healthMode === 'flare' ? 'bg-terracotta-50/50' : 'bg-sage-50'}`}>
-      <div className="max-w-6xl mx-auto px-4 pt-4">
+    <div className="min-h-screen pb-24 mode-transition" style={{ background: 'var(--void)' }}>
+      {/* Ambient smoke glow at top */}
+      <div className="fixed top-0 left-0 right-0 h-64 pointer-events-none hero-glow" />
+
+      <div className="max-w-6xl mx-auto px-4 pt-4 relative z-10">
         {/* Header */}
         <header className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md ${
-              healthMode === 'flare' ? 'bg-terracotta-500' : 'bg-sage-500'
-            }`}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg animate-glow-pulse"
+              style={{
+                background: healthMode === 'flare'
+                  ? 'linear-gradient(135deg, var(--crimson) 0%, var(--crimson-dim) 100%)'
+                  : 'linear-gradient(135deg, var(--smoke-green) 0%, #1a3d28 100%)',
+                boxShadow: healthMode === 'flare'
+                  ? '0 0 20px var(--crimson-glow)'
+                  : '0 0 20px var(--smoke-green-glow)'
+              }}>
               🍳
             </div>
             <div>
-              <h1 className="text-lg font-bold text-sage-900 leading-tight">Colitis Gourmet</h1>
-              <p className="text-xs text-sage-500">Meal Planner for UC</p>
+              <h1 className="text-lg font-bold leading-tight" style={{ color: 'var(--text-primary)', fontFamily: 'Playfair Display, serif' }}>
+                Colitis Gourmet
+              </h1>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Meal Planner for UC</p>
             </div>
           </div>
         </header>
