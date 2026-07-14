@@ -117,7 +117,7 @@ export default function LandingPage({ onEnter }: LandingPageProps) {
             lineHeight: 1.6,
           }}
         >
-          Fuel your body. Feed your soul.
+          Forward is enough.
         </p>
 
         {/* Enter Button — Dramatic Crimson Glow */}
@@ -172,7 +172,7 @@ export default function LandingPage({ onEnter }: LandingPageProps) {
             letterSpacing: '0.15em',
           }}
         >
-          Created with love by Babykay
+          Created with heart by Babykay
         </p>
         <p
           className="text-[10px] mt-1"
