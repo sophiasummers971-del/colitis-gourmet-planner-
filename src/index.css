@@ -1,0 +1,170 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --sage-50: #f6f7f4;
+  --sage-100: #e3e7dd;
+  --sage-200: #c7d0bb;
+  --sage-300: #a5b392;
+  --sage-400: #84976e;
+  --sage-500: #687d52;
+  --sage-600: #526341;
+  --sage-700: #424f35;
+  --sage-800: #37402d;
+  --sage-900: #2f3627;
+
+  --terracotta-50: #fdf6f3;
+  --terracotta-100: #faebe5;
+  --terracotta-200: #f5d5c9;
+  --terracotta-300: #edb7a3;
+  --terracotta-400: #e39173;
+  --terracotta-500: #d9734e;
+  --terracotta-600: #c95d39;
+  --terracotta-700: #a74b2e;
+  --terracotta-800: #8b3f29;
+  --terracotta-900: #723726;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--sage-50);
+  color: var(--sage-900);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-sage-600 text-white px-6 py-3 rounded-xl font-semibold 
+           hover:bg-sage-700 active:bg-sage-800 transition-all duration-200
+           shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-terracotta-500 text-white px-6 py-3 rounded-xl font-semibold 
+           hover:bg-terracotta-600 active:bg-terracotta-700 transition-all duration-200
+           shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-sage-100 
+           hover:shadow-md transition-all duration-200 p-6;
+  }
+
+  .card-highlight {
+    @apply bg-white rounded-2xl shadow-md border-2 border-sage-200 
+           hover:shadow-lg transition-all duration-200 p-6;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-sage-200 bg-white
+           focus:outline-none focus:ring-2 focus:ring-sage-400 focus:border-transparent
+           placeholder:text-sage-300 transition-all duration-200;
+  }
+
+  .badge-flare {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+           bg-terracotta-100 text-terracotta-700 border border-terracotta-200;
+  }
+
+  .badge-remission {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+           bg-sage-100 text-sage-700 border border-sage-200;
+  }
+
+  .badge-safe {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+           bg-emerald-100 text-emerald-700 border border-emerald-200;
+  }
+
+  .badge-avoid {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+           bg-red-100 text-red-700 border border-red-200;
+  }
+
+  .page-container {
+    @apply max-w-6xl mx-auto px-4 py-6 animate-fade-in;
+  }
+
+  .section-title {
+    @apply text-2xl font-bold text-sage-900 mb-1;
+  }
+
+  .section-subtitle {
+    @apply text-sm text-sage-500 mb-6;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--sage-50);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--sage-300);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sage-400);
+}
+
+/* Flare mode override */
+.flare-mode .card,
+.flare-mode .card-highlight {
+  @apply border-terracotta-100;
+}
+.flare-mode .section-title {
+  @apply text-terracotta-900;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+.mode-transition {
+  transition: background-color 0.5s ease, border-color 0.5s ease, color 0.5s ease;
+}
+
+/* Toggle switch */
+.toggle-track {
+  @apply relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full 
+         transition-colors duration-300 ease-in-out;
+}
+.toggle-track.remission {
+  @apply bg-sage-500;
+}
+.toggle-track.flare {
+  @apply bg-terracotta-500;
+}
+.toggle-thumb {
+  @apply pointer-events-none inline-block h-6 w-6 translate-x-1 rounded-full 
+         bg-white shadow-lg ring-0 transition duration-300 ease-in-out;
+}
+.toggle-track.flare .toggle-thumb {
+  @apply translate-x-7;
+}
