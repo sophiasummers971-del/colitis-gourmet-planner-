@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useApp } from './context/AppContext';
+import LandingPage from './components/LandingPage';
 import NavBar from './components/NavBar';
 import Home from './pages/Home';
 import FoodExplorer from './pages/FoodExplorer';
@@ -10,9 +12,14 @@ import Settings from './pages/Settings';
 
 function App() {
   const { healthMode } = useApp();
+  const [hasEntered, setHasEntered] = useState(false);
+
+  if (!hasEntered) {
+    return <LandingPage onEnter={() => setHasEntered(true)} />;
+  }
 
   return (
-    <div className="min-h-screen pb-24 mode-transition" style={{ background: 'var(--void)' }}>
+    <div className="min-h-screen pb-24 mode-transition animate-fade-in" style={{ background: 'var(--void)' }}>
       {/* Ambient smoke glow at top */}
       <div className="fixed top-0 left-0 right-0 h-64 pointer-events-none hero-glow" />
 
