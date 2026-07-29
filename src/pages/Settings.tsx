@@ -1,11 +1,28 @@
-import { useApp } from '../context/AppContext';
+import { useApp, type AppPreferences } from '../context/AppContext';
 import {
   User, Weight, Wallet, HeartPulse, FileText,
-  Info, Sparkles
+  Info, Sparkles, Zap, Eye, Palette, Target,
+  Flame
 } from 'lucide-react';
 
 export default function Settings() {
-  const { profile, updateProfile, healthMode } = useApp();
+  const { profile, updateProfile, healthMode, preferences, updatePreferences } = useApp();
+
+  const togglePref = <K extends keyof AppPreferences>(key: K, value: AppPreferences[K]) => {
+    updatePreferences({ [key]: value } as Partial<AppPreferences>);
+  };
+
+  const accentColors: { key: AppPreferences['accentColor']; label: string; color: string }[] = [
+    { key: 'crimson', label: 'Crimson', color: '#C41E3A' },
+    { key: 'emerald', label: 'Emerald', color: '#2d5a3d' },
+    { key: 'ocean', label: 'Ocean', color: '#4a6fa5' },
+  ];
+
+  const portionSizes: { key: AppPreferences['portionSize']; label: string; multiplier: number }[] = [
+    { key: 'small', label: 'Small', multiplier: 0.75 },
+    { key: 'medium', label: 'Medium', multiplier: 1 },
+    { key: 'large', label: 'Large', multiplier: 1.25 },
+  ];
 
   return (
     <div className="page-container animate-smoke-reveal">
@@ -15,12 +32,11 @@ export default function Settings() {
           The Backstage
         </p>
         <h2 className="section-title" style={{ fontSize: '1.75rem' }}>Settings</h2>
-        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Your profile and preferences</p>
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Your profile, preferences, and customisation</p>
       </div>
 
-      {/* Profile Card — Glowing Avatar */}
-      <div className="menu-card mb-6 animate-drop-in"
-      >
+      {/* Profile Card */}
+      <div className="menu-card mb-6 animate-drop-in">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-xl font-bold"
             style={{
@@ -44,9 +60,7 @@ export default function Settings() {
 
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-semibold mb-1 flex items-center gap-1.5"
-              style={{ color: 'var(--text-muted)' }}
-            >
+            <label className="text-xs font-semibold mb-1 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
               <User size={14} /> Name
             </label>
             <input
@@ -60,9 +74,7 @@ export default function Settings() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold mb-1 flex items-center gap-1.5"
-                style={{ color: 'var(--text-muted)' }}
-              >
+              <label className="text-xs font-semibold mb-1 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
                 <Weight size={14} /> Weight (kg)
               </label>
               <input
@@ -74,9 +86,7 @@ export default function Settings() {
               />
             </div>
             <div>
-              <label className="text-xs font-semibold mb-1 flex items-center gap-1.5"
-                style={{ color: 'var(--text-muted)' }}
-              >
+              <label className="text-xs font-semibold mb-1 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
                 <Wallet size={14} /> Weekly Budget (£)
               </label>
               <input
@@ -90,9 +100,7 @@ export default function Settings() {
           </div>
 
           <div>
-            <label className="text-xs font-semibold mb-1 flex items-center gap-1.5"
-              style={{ color: 'var(--text-muted)' }}
-            >
+            <label className="text-xs font-semibold mb-1 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
               <HeartPulse size={14} /> Dietary Notes
             </label>
             <textarea
@@ -105,7 +113,126 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* About Section — Dark */}
+      {/* Nutrition Goals */}
+      <div className="menu-card mb-6 animate-drop-in">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, var(--ember) 0%, var(--ember-dim) 100%)', boxShadow: '0 0 15px var(--ember-glow)' }}>
+            <Target size={16} style={{ color: '#fff' }} />
+          </div>
+          <p className="font-bold" style={{ color: 'var(--text-primary)' }}>Nutrition Goals</p>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold mb-1 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+              <Flame size={14} /> Daily Calorie Target
+            </label>
+            <input
+              type="number"
+              value={preferences.dailyCalorieGoal}
+              onChange={e => togglePref('dailyCalorieGoal', Number(e.target.value) || 0)}
+              className="input-field"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold mb-1 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+              <HeartPulse size={14} /> Daily Protein Target (g)
+            </label>
+            <input
+              type="number"
+              value={preferences.dailyProteinGoal}
+              onChange={e => togglePref('dailyProteinGoal', Number(e.target.value) || 0)}
+              className="input-field"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold mb-2 block" style={{ color: 'var(--text-muted)' }}>Portion Size</label>
+            <div className="flex gap-2">
+              {portionSizes.map(p => (
+                <button
+                  key={p.key}
+                  onClick={() => togglePref('portionSize', p.key)}
+                  className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all"
+                  style={{
+                    background: preferences.portionSize === p.key
+                      ? 'linear-gradient(135deg, var(--crimson) 0%, var(--crimson-dim) 100%)'
+                      : 'var(--surface-hover)',
+                    color: preferences.portionSize === p.key ? '#fff' : 'var(--text-secondary)',
+                    border: '1px solid var(--border-subtle)',
+                    boxShadow: preferences.portionSize === p.key ? '0 0 10px var(--crimson-glow)' : 'none',
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Appearance */}
+      <div className="menu-card mb-6 animate-drop-in">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, var(--crimson) 0%, var(--crimson-dim) 100%)', boxShadow: '0 0 15px var(--crimson-glow)' }}>
+            <Palette size={16} style={{ color: '#fff' }} />
+          </div>
+          <p className="font-bold" style={{ color: 'var(--text-primary)' }}>Appearance</p>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold mb-2 block" style={{ color: 'var(--text-muted)' }}>Accent Colour</label>
+            <div className="flex gap-2">
+              {accentColors.map(c => (
+                <button
+                  key={c.key}
+                  onClick={() => togglePref('accentColor', c.key)}
+                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all"
+                  style={{
+                    background: preferences.accentColor === c.key ? `${c.color}20` : 'var(--surface-hover)',
+                    color: preferences.accentColor === c.key ? c.color : 'var(--text-secondary)',
+                    border: `1px solid ${preferences.accentColor === c.key ? c.color : 'var(--border-subtle)'}`,
+                  }}
+                >
+                  <span className="w-3 h-3 rounded-full" style={{ background: c.color }} />
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <ToggleRow
+            icon={Sparkles}
+            label="Animations"
+            description="Enable smooth transitions and effects"
+            value={preferences.animationsEnabled}
+            onChange={() => togglePref('animationsEnabled', !preferences.animationsEnabled)}
+          />
+          <ToggleRow
+            icon={Eye}
+            label="Particle Background"
+            description="Interactive animated background"
+            value={preferences.particleBackground}
+            onChange={() => togglePref('particleBackground', !preferences.particleBackground)}
+          />
+          <ToggleRow
+            icon={Zap}
+            label="Compact Mode"
+            description="Tighter spacing, more content per screen"
+            value={preferences.compactMode}
+            onChange={() => togglePref('compactMode', !preferences.compactMode)}
+          />
+          <ToggleRow
+            icon={Eye}
+            label="Nutrition on Cards"
+            description="Show calories & protein on food cards"
+            value={preferences.showNutritionOnCards}
+            onChange={() => togglePref('showNutritionOnCards', !preferences.showNutritionOnCards)}
+          />
+        </div>
+      </div>
+
+      {/* About Section */}
       <div className="menu-card mb-6 animate-drop-in">
         <div className="flex items-center gap-2 mb-3">
           <Info size={18} style={{ color: 'var(--text-muted)' }} />
@@ -113,7 +240,7 @@ export default function Settings() {
         </div>
         <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
           A meal planning app for people living with Ulcerative Colitis.
-          Created with love by Jade and Babykay. 💚
+          Created with love by Jade and Babykay.
         </p>
         <div className="space-y-2 text-xs">
           <p className="flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
@@ -131,7 +258,7 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Disclaimer — Amber Glow */}
+      {/* Disclaimer */}
       <div className="menu-card animate-drop-in"
         style={{
           background: 'linear-gradient(145deg, rgba(212,160,23,0.05) 0%, var(--surface) 100%)',
@@ -150,6 +277,40 @@ export default function Settings() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ToggleRow({
+  icon: Icon,
+  label,
+  description,
+  value,
+  onChange,
+}: {
+  icon: typeof Zap;
+  label: string;
+  description: string;
+  value: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <Icon size={18} style={{ color: 'var(--text-muted)' }} />
+        <div>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{label}</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{description}</p>
+        </div>
+      </div>
+      <button
+        onClick={onChange}
+        className={`toggle-track ${value ? 'flare' : ''}`}
+        role="switch"
+        aria-checked={value}
+      >
+        <span className="toggle-thumb" />
+      </button>
     </div>
   );
 }

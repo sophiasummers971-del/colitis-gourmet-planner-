@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useApp } from './context/AppContext';
 import LandingPage from './components/LandingPage';
+import ParticleBackground from './components/ParticleBackground';
 import NavBar from './components/NavBar';
 import Home from './pages/Home';
 import FoodExplorer from './pages/FoodExplorer';
@@ -9,9 +10,11 @@ import WeeklyPlanner from './pages/WeeklyPlanner';
 import ShoppingList from './pages/ShoppingList';
 import NutritionDashboard from './pages/NutritionDashboard';
 import Settings from './pages/Settings';
+import Resources from './pages/Resources';
+import HelpSupport from './pages/HelpSupport';
 
 function App() {
-  const { healthMode } = useApp();
+  const { healthMode, preferences } = useApp();
   const [hasEntered, setHasEntered] = useState(false);
 
   if (!hasEntered) {
@@ -19,7 +22,12 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen pb-24 mode-transition animate-fade-in" style={{ background: 'var(--void)' }}>
+    <div className="min-h-screen pb-24 mode-transition animate-fade-in relative" style={{ background: 'var(--void)' }}>
+      {/* Interactive particle background */}
+      {preferences.particleBackground && (
+        <ParticleBackground mode={healthMode} />
+      )}
+
       {/* Ambient smoke glow at top */}
       <div className="fixed top-0 left-0 right-0 h-64 pointer-events-none hero-glow" />
 
@@ -53,6 +61,8 @@ function App() {
           <Route path="/planner" element={<WeeklyPlanner />} />
           <Route path="/shopping" element={<ShoppingList />} />
           <Route path="/nutrition" element={<NutritionDashboard />} />
+          <Route path="/resources" element={<Resources />} />
+          <Route path="/help" element={<HelpSupport />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </div>

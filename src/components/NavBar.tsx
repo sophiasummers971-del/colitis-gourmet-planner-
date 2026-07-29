@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Home, Search, Calendar, ShoppingCart, Settings, BarChart3, Users } from 'lucide-react';
+import { Hop as Home, Search, Calendar, ShoppingCart, ChartBar as BarChart3, Settings, BookOpen, Circle as HelpCircle, Users } from 'lucide-react';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Home' },
@@ -8,6 +8,8 @@ const navItems = [
   { path: '/planner', icon: Calendar, label: 'Planner' },
   { path: '/shopping', icon: ShoppingCart, label: 'Shopping' },
   { path: '/nutrition', icon: BarChart3, label: 'Nutrition' },
+  { path: '/resources', icon: BookOpen, label: 'Resources' },
+  { path: '/help', icon: HelpCircle, label: 'Help' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 
@@ -21,13 +23,13 @@ export default function NavBar() {
       {/* Bottom Navigation — Dark Glass */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 mode-transition"
         style={{
-          background: 'linear-gradient(180deg, rgba(7,7,8,0.8) 0%, rgba(7,7,8,0.95) 100%)',
+          background: 'linear-gradient(180deg, rgba(7,7,8,0.85) 0%, rgba(7,7,8,0.97) 100%)',
           backdropFilter: 'blur(20px)',
           borderTop: '1px solid var(--border-subtle)',
           boxShadow: '0 -4px 30px rgba(0,0,0,0.5)'
         }}>
-        <div className="max-w-6xl mx-auto px-2 py-2">
-          <div className="flex items-center justify-between gap-1">
+        <div className="max-w-6xl mx-auto px-1 py-2">
+          <div className="flex items-center justify-between gap-0.5 overflow-x-auto scrollbar-hide">
             {navItems.map(item => {
               const Icon = item.icon;
               const active = isActive(item.path);
@@ -36,6 +38,7 @@ export default function NavBar() {
                   key={item.path}
                   to={item.path}
                   className={`nav-item ${active ? 'active' : ''}`}
+                  style={{ minWidth: '52px' }}
                 >
                   <Icon size={20} strokeWidth={active ? 2.5 : 1.5} />
                   <span className="font-medium">{item.label}</span>
@@ -47,7 +50,7 @@ export default function NavBar() {
       </nav>
 
       {/* Floating Mode Toggles — Top Right */}
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
         {/* Family Mode Toggle */}
         <button
           onClick={() => setIsFamilyMode(!isFamilyMode)}
@@ -81,7 +84,7 @@ export default function NavBar() {
           }}
         >
           <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-          {healthMode === 'flare' ? '🔥 FLARE' : '🌿 REMISSION'}
+          {healthMode === 'flare' ? 'FLARE' : 'REMISSION'}
         </button>
       </div>
     </>
