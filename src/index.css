@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
   /* Smoky Crimson — Dark Menu Card Theme */
@@ -40,6 +40,26 @@
   --avoid: #a83232;
   --avoid-glow: rgba(168,50,50,0.2);
   --warn: #b88020;
+
+  /* Food Category Accents — Appetising */
+  --cat-grains: #D4A017;
+  --cat-grains-glow: rgba(212,160,23,0.15);
+  --cat-proteins: #C41E3A;
+  --cat-proteins-glow: rgba(196,30,58,0.15);
+  --cat-vegetables: #3d8b5d;
+  --cat-vegetables-glow: rgba(61,139,93,0.15);
+  --cat-fruits: #c8651a;
+  --cat-fruits-glow: rgba(200,101,26,0.15);
+  --cat-dairy: #6b8db5;
+  --cat-dairy-glow: rgba(107,141,181,0.15);
+  --cat-fats: #b8860b;
+  --cat-fats-glow: rgba(184,134,11,0.15);
+  --cat-beverages: #4a6fa5;
+  --cat-beverages-glow: rgba(74,111,165,0.15);
+  --cat-herbs: #5a8a4a;
+  --cat-herbs-glow: rgba(90,138,74,0.15);
+  --cat-snacks: #a0703a;
+  --cat-snacks-glow: rgba(160,112,58,0.15);
 }
 
 body {
@@ -107,6 +127,32 @@ h1, h2, h3, .font-display {
   }
   .menu-card:hover::before {
     opacity: 1;
+  }
+
+  /* Food Card — Category-tinted left accent */
+  .food-card {
+    @apply relative rounded-xl p-5 overflow-hidden transition-all duration-300;
+    background: linear-gradient(145deg, var(--surface-raised) 0%, var(--surface) 100%);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .food-card:hover {
+    border-color: var(--border-glow);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 30px var(--crimson-smoke), inset 0 1px 0 rgba(255,255,255,0.05);
+    transform: translateY(-2px);
+  }
+  .food-card::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--cat-accent, var(--crimson));
+    opacity: 0.6;
+    transition: opacity 0.3s, width 0.3s;
+  }
+  .food-card:hover::after {
+    opacity: 1;
+    width: 4px;
   }
 
   /* Highlight Card */
@@ -410,4 +456,63 @@ a {
 }
 .animate-scale-in {
   animation: scaleIn 0.2s ease-out;
+}
+
+/* Slide in from right */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-right {
+  animation: slideInRight 0.4s ease-out;
+}
+
+/* Gentle rotate for icons */
+@keyframes gentleSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-gentle-spin {
+  animation: gentleSpin 8s linear infinite;
+}
+
+/* Pulse glow for status indicators */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.15); }
+}
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Text gradient shimmer */
+@keyframes textShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.text-shimmer {
+  background: linear-gradient(90deg, var(--text-primary) 0%, var(--crimson) 50%, var(--text-primary) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 4s linear infinite;
+}
+
+/* Glass card with blur */
+.glass-card {
+  background: linear-gradient(145deg, rgba(22,22,26,0.7) 0%, rgba(15,15,18,0.8) 100%);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Nutrition stat number */
+.stat-number {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--text-primary);
+  text-shadow: 0 2px 15px rgba(0,0,0,0.4);
 }
