@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Circle as HelpCircle, ChevronDown, Mail, MessageCircle, Send, Lightbulb, Bug, Sparkles, CircleCheck as CheckCircle, LifeBuoy, BookOpen } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 interface FaqEntry {
   id: string;
