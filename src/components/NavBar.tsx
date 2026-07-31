@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router';
 import { useApp } from '../context/AppContext';
 import { Hop as Home, Search, Calendar, ShoppingCart, ChartBar as BarChart3, Settings, BookOpen, Circle as HelpCircle, Users } from 'lucide-react';
 
