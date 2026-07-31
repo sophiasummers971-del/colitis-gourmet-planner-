@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "oxlint",
+    "lint": "oxlint src",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -24,7 +24,7 @@
     "autoprefixer": "^10.5.2",
     "oxlint": "^1.71.0",
     "postcss": "^8.5.19",
-    "tailwindcss": "^4.3.2",
+    "tailwindcss": "^3.4.19",
     "typescript": "~6.0.2",
     "vite": "^8.1.1"
   }
