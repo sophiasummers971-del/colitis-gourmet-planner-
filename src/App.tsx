@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router';
 import { useApp } from './context/AppContext';
 import LandingPage from './components/LandingPage';
 import ParticleBackground from './components/ParticleBackground';
