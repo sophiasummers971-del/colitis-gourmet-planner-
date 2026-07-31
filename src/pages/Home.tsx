@@ -1,5 +1,5 @@
 import { useApp } from '../context/AppContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Weight, Wallet, Utensils, HeartPulse, ShoppingCart, Settings, ChevronRight, Flame, Shield, Sparkles, BookOpen, Circle as HelpCircle, Target, Droplets } from 'lucide-react';
 
 export default function Home() {
