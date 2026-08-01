@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { supabase } from '../lib/supabase';
 
 export type HealthMode = 'flare' | 'remission';
 
@@ -65,11 +64,11 @@ interface AppContextType extends AppState {
 }
 
 const defaultProfile: UserProfile = {
-  name: 'Vernon',
-  weight: 75,
-  weeklyBudget: 60,
+  name: 'Guest',
+  weight: 70,
+  weeklyBudget: 50,
   healthMode: 'remission',
-  dietaryNotes: 'No dairy, prefers fish over red meat',
+  dietaryNotes: '',
 };
 
 const defaultPreferences: AppPreferences = {
@@ -96,251 +95,126 @@ const defaultMealPlan: MealPlanItem[] = [
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const storageKey = 'colitis-gourmet-planner:v1';
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
   const [healthMode, setHealthModeState] = useState<HealthMode>(defaultProfile.healthMode);
-  const [mealPlan, setMealPlan] = useState<MealPlanItem[]>([]);
+  const [mealPlan, setMealPlan] = useState<MealPlanItem[]>(defaultMealPlan);
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
   const [isFamilyMode, setIsFamilyMode] = useState(false);
   const [preferences, setPreferences] = useState<AppPreferences>(defaultPreferences);
   const [loaded, setLoaded] = useState(false);
 
-  // Load all data from Supabase on mount
   useEffect(() => {
-    let cancelled = false;
-
-    async function loadAll() {
-      try {
-        const [mealsRes, shoppingRes, settingsRes] = await Promise.all([
-          supabase.from('meal_plans').select('*').order('created_at'),
-          supabase.from('shopping_items').select('*').order('created_at'),
-          supabase.from('app_settings').select('*'),
-        ]);
-
-        if (cancelled) return;
-
-        if (mealsRes.data && mealsRes.data.length > 0) {
-          setMealPlan(mealsRes.data.map((m: Record<string, unknown>) => ({
-            id: m.id as string,
-            day: m.day as string,
-            mealType: m.meal_type as MealPlanItem['mealType'],
-            foodName: m.food_name as string,
-            calories: m.calories as number,
-            protein: Number(m.protein),
-            notes: (m.notes as string) || '',
-          })));
-        } else {
-          // Seed default meal plan
-          setMealPlan(defaultMealPlan);
-          await supabase.from('meal_plans').insert(
-            defaultMealPlan.map(m => ({
-              id: m.id,
-              day: m.day,
-              meal_type: m.mealType,
-              food_name: m.foodName,
-              calories: m.calories,
-              protein: m.protein,
-              notes: m.notes,
-            }))
-          );
-        }
-
-        if (shoppingRes.data) {
-          setShoppingList(shoppingRes.data.map((s: Record<string, unknown>) => ({
-            id: s.id as string,
-            name: s.name as string,
-            quantity: s.quantity as string,
-            category: s.category as string,
-            checked: s.checked as boolean,
-          })));
-        }
-
-        if (settingsRes.data) {
-          const settingsMap: Record<string, string> = {};
-          settingsRes.data.forEach((s: Record<string, unknown>) => {
-            settingsMap[s.key as string] = s.value as string;
-          });
-
-          const storedProfile = settingsMap['profile'];
-          if (storedProfile) {
-            try {
-              const parsed = JSON.parse(storedProfile) as Partial<UserProfile>;
-              const merged = { ...defaultProfile, ...parsed };
-              setProfile(merged);
-              setHealthModeState(merged.healthMode);
-            } catch { /* ignore parse errors */ }
-          }
-
-          const storedPrefs = settingsMap['preferences'];
-          if (storedPrefs) {
-            try {
-              const parsed = JSON.parse(storedPrefs) as Partial<AppPreferences>;
-              setPreferences({ ...defaultPreferences, ...parsed });
-            } catch { /* ignore */ }
-          }
-
-          const storedFamily = settingsMap['family_mode'];
-          if (storedFamily) setIsFamilyMode(storedFamily === 'true');
-        }
-      } catch {
-        // Fall back to defaults
-      } finally {
-        if (!cancelled) setLoaded(true);
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const stored = JSON.parse(raw) as Partial<AppState>;
+        const nextProfile = { ...defaultProfile, ...(stored.profile || {}) };
+        setProfile(nextProfile);
+        setHealthModeState(stored.healthMode || nextProfile.healthMode);
+        setMealPlan(Array.isArray(stored.mealPlan) ? stored.mealPlan : defaultMealPlan);
+        setShoppingList(Array.isArray(stored.shoppingList) ? stored.shoppingList : []);
+        setIsFamilyMode(Boolean(stored.isFamilyMode));
+        setPreferences({ ...defaultPreferences, ...(stored.preferences || {}) });
       }
+    } catch {
+      // If stored data is invalid, start safely with neutral defaults.
+    } finally {
+      setLoaded(true);
     }
-
-    loadAll();
-    return () => { cancelled = true; };
   }, []);
 
-  // Persist profile to Supabase
-  const persistProfile = useCallback((p: UserProfile) => {
-    supabase.from('app_settings').upsert({
-      key: 'profile',
-      value: JSON.stringify(p),
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'key' }).then();
-  }, []);
-
-  // Persist preferences to Supabase
-  const persistPreferences = useCallback((prefs: AppPreferences) => {
-    supabase.from('app_settings').upsert({
-      key: 'preferences',
-      value: JSON.stringify(prefs),
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'key' }).then();
-  }, []);
+  useEffect(() => {
+    if (!loaded) return;
+    const state: AppState = {
+      profile,
+      healthMode,
+      mealPlan,
+      shoppingList,
+      isFamilyMode,
+      preferences,
+    };
+    localStorage.setItem(storageKey, JSON.stringify(state));
+  }, [loaded, profile, healthMode, mealPlan, shoppingList, isFamilyMode, preferences]);
 
   const setHealthMode = useCallback((mode: HealthMode) => {
     setHealthModeState(mode);
-    setProfile(p => {
-      const updated = { ...p, healthMode: mode };
-      persistProfile(updated);
-      return updated;
-    });
-  }, [persistProfile]);
+    setProfile(p => ({ ...p, healthMode: mode }));
+  }, []);
 
   const updateProfile = useCallback((updates: Partial<UserProfile>) => {
-    setProfile(p => {
-      const updated = { ...p, ...updates };
-      persistProfile(updated);
-      return updated;
-    });
+    setProfile(p => ({ ...p, ...updates }));
     if (updates.healthMode) setHealthModeState(updates.healthMode);
-  }, [persistProfile]);
+  }, []);
 
   const addToMealPlan = useCallback((item: Omit<MealPlanItem, 'id'>) => {
-    const id = crypto.randomUUID();
-    setMealPlan(prev => [...prev, { ...item, id }]);
-    supabase.from('meal_plans').insert({
-      id,
-      day: item.day,
-      meal_type: item.mealType,
-      food_name: item.foodName,
-      calories: item.calories,
-      protein: item.protein,
-      notes: item.notes,
-    }).then();
+    setMealPlan(prev => [...prev, { ...item, id: crypto.randomUUID() }]);
   }, []);
 
   const removeFromMealPlan = useCallback((id: string) => {
     setMealPlan(prev => prev.filter(i => i.id !== id));
-    supabase.from('meal_plans').delete().eq('id', id).then();
   }, []);
 
   const addToShoppingList = useCallback((item: Omit<ShoppingItem, 'id' | 'checked'>) => {
-    const id = crypto.randomUUID();
-    setShoppingList(prev => [...prev, { ...item, id, checked: false }]);
-    supabase.from('shopping_items').insert({
-      id,
-      name: item.name,
-      quantity: item.quantity,
-      category: item.category,
-      checked: false,
-    }).then();
+    setShoppingList(prev => [...prev, { ...item, id: crypto.randomUUID(), checked: false }]);
   }, []);
 
   const toggleShoppingItem = useCallback((id: string) => {
-    setShoppingList(prev => prev.map(i => {
-      if (i.id === id) {
-        const updated = { ...i, checked: !i.checked };
-        supabase.from('shopping_items').update({ checked: updated.checked }).eq('id', id).then();
-        return updated;
-      }
-      return i;
-    }));
+    setShoppingList(prev => prev.map(i => i.id === id ? { ...i, checked: !i.checked } : i));
   }, []);
 
   const removeFromShoppingList = useCallback((id: string) => {
     setShoppingList(prev => prev.filter(i => i.id !== id));
-    supabase.from('shopping_items').delete().eq('id', id).then();
   }, []);
 
   const clearCheckedItems = useCallback(() => {
-    const checked = shoppingList.filter(i => i.checked);
     setShoppingList(prev => prev.filter(i => !i.checked));
-    if (checked.length > 0) {
-      supabase.from('shopping_items').delete().in('id', checked.map(c => c.id)).then();
-    }
-  }, [shoppingList]);
+  }, []);
 
   const generateShoppingListFromMealPlan = useCallback(() => {
     const ingredients: { name: string; quantity: string; category: string }[] = [];
     mealPlan.forEach(item => {
-      if (item.foodName.includes('Oatmeal')) ingredients.push({ name: 'Oats', quantity: '500g', category: 'Grains' });
-      if (item.foodName.includes('banana')) ingredients.push({ name: 'Bananas', quantity: '6', category: 'Produce' });
-      if (item.foodName.includes('chicken')) ingredients.push({ name: 'Chicken breast', quantity: '400g', category: 'Meat & Fish' });
-      if (item.foodName.includes('rice')) ingredients.push({ name: 'White rice', quantity: '1kg', category: 'Grains' });
-      if (item.foodName.includes('salmon')) ingredients.push({ name: 'Salmon fillet', quantity: '300g', category: 'Meat & Fish' });
-      if (item.foodName.includes('potato')) ingredients.push({ name: 'Potatoes', quantity: '1kg', category: 'Produce' });
-      if (item.foodName.includes('eggs')) ingredients.push({ name: 'Eggs', quantity: '12', category: 'Dairy' });
-      if (item.foodName.includes('toast')) ingredients.push({ name: 'White bread', quantity: '1 loaf', category: 'Grains' });
-      if (item.foodName.includes('Turkey')) ingredients.push({ name: 'Turkey breast', quantity: '300g', category: 'Meat & Fish' });
-      if (item.foodName.includes('pasta')) ingredients.push({ name: 'White pasta', quantity: '500g', category: 'Grains' });
-      if (item.foodName.includes('fish')) ingredients.push({ name: 'White fish', quantity: '300g', category: 'Meat & Fish' });
-      if (item.foodName.includes('carrots')) ingredients.push({ name: 'Carrots', quantity: '500g', category: 'Produce' });
+      const food = item.foodName.toLowerCase();
+      if (food.includes('oatmeal')) ingredients.push({ name: 'Oats', quantity: '500g', category: 'Grains' });
+      if (food.includes('banana')) ingredients.push({ name: 'Bananas', quantity: '6', category: 'Produce' });
+      if (food.includes('chicken')) ingredients.push({ name: 'Chicken breast', quantity: '400g', category: 'Meat & Fish' });
+      if (food.includes('rice')) ingredients.push({ name: 'White rice', quantity: '1kg', category: 'Grains' });
+      if (food.includes('salmon')) ingredients.push({ name: 'Salmon fillet', quantity: '300g', category: 'Meat & Fish' });
+      if (food.includes('potato')) ingredients.push({ name: 'Potatoes', quantity: '1kg', category: 'Produce' });
+      if (food.includes('egg')) ingredients.push({ name: 'Eggs', quantity: '12', category: 'Dairy' });
+      if (food.includes('toast')) ingredients.push({ name: 'White bread', quantity: '1 loaf', category: 'Grains' });
+      if (food.includes('turkey')) ingredients.push({ name: 'Turkey breast', quantity: '300g', category: 'Meat & Fish' });
+      if (food.includes('pasta')) ingredients.push({ name: 'White pasta', quantity: '500g', category: 'Grains' });
+      if (food.includes('fish')) ingredients.push({ name: 'White fish', quantity: '300g', category: 'Meat & Fish' });
+      if (food.includes('carrot')) ingredients.push({ name: 'Carrots', quantity: '500g', category: 'Produce' });
     });
-    const seen = new Set(shoppingList.map(s => s.name));
-    const newItems: ShoppingItem[] = [];
-    ingredients.forEach(ing => {
-      if (!seen.has(ing.name)) {
-        const id = crypto.randomUUID();
-        newItems.push({ ...ing, id, checked: false });
-        seen.add(ing.name);
-      }
-    });
-    if (newItems.length > 0) {
-      setShoppingList(prev => [...prev, ...newItems]);
-      supabase.from('shopping_items').insert(
-        newItems.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, category: i.category, checked: false }))
-      ).then();
-    }
-  }, [mealPlan, shoppingList]);
 
-  const setIsFamilyModeCallback = useCallback((v: boolean) => {
-    setIsFamilyMode(v);
-    supabase.from('app_settings').upsert({
-      key: 'family_mode',
-      value: v ? 'true' : 'false',
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'key' }).then();
-  }, []);
+    setShoppingList(prev => {
+      const seen = new Set(prev.map(item => item.name.toLowerCase()));
+      const additions = ingredients
+        .filter(item => {
+          const key = item.name.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .map(item => ({ ...item, id: crypto.randomUUID(), checked: false }));
+      return [...prev, ...additions];
+    });
+  }, [mealPlan]);
 
   const updatePreferences = useCallback((prefs: Partial<AppPreferences>) => {
-    setPreferences(prev => {
-      const updated = { ...prev, ...prefs };
-      persistPreferences(updated);
-      return updated;
-    });
-  }, [persistPreferences]);
+    setPreferences(prev => ({ ...prev, ...prefs }));
+  }, []);
 
   if (!loaded) {
     return (
       <div className="fixed inset-0 flex items-center justify-center" style={{ background: 'var(--void)' }}>
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full animate-glow-pulse"
-            style={{
-              background: 'linear-gradient(135deg, var(--crimson) 0%, var(--crimson-dim) 100%)',
-            }} />
+          <div
+            className="w-16 h-16 mx-auto mb-4 rounded-full animate-glow-pulse"
+            style={{ background: 'linear-gradient(135deg, var(--crimson) 0%, var(--crimson-dim) 100%)' }}
+          />
           <p className="text-sm animate-pulse" style={{ color: 'var(--text-muted)', fontFamily: "'Playfair Display', serif" }}>
             Preparing your menu...
           </p>
@@ -351,10 +225,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider value={{
-      profile, healthMode, mealPlan, shoppingList, isFamilyMode, preferences,
-      setHealthMode, updateProfile, addToMealPlan, removeFromMealPlan,
-      addToShoppingList, toggleShoppingItem, removeFromShoppingList, clearCheckedItems,
-      generateShoppingListFromMealPlan, setIsFamilyMode: setIsFamilyModeCallback,
+      profile,
+      healthMode,
+      mealPlan,
+      shoppingList,
+      isFamilyMode,
+      preferences,
+      setHealthMode,
+      updateProfile,
+      addToMealPlan,
+      removeFromMealPlan,
+      addToShoppingList,
+      toggleShoppingItem,
+      removeFromShoppingList,
+      clearCheckedItems,
+      generateShoppingListFromMealPlan,
+      setIsFamilyMode,
       updatePreferences,
     }}>
       {children}
