@@ -1,17 +1,6 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { useState } from 'react';
+import { RESOURCES, filterResources } from '../data/colitisContent';
 import { BookOpen, ExternalLink, Search, Heart, Stethoscope, Globe, FlaskConical } from 'lucide-react';
-
-interface Resource {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  url: string;
-  source: string;
-  body: string;
-  tags: string[];
-}
 
 const categoryConfig: Record<string, { icon: typeof BookOpen; color: string; label: string }> = {
   NHS: { icon: Heart, color: 'linear-gradient(135deg, #0088b8 0%, #006699 100%)', label: 'NHS Official' },
@@ -21,40 +10,13 @@ const categoryConfig: Record<string, { icon: typeof BookOpen; color: string; lab
 };
 
 export default function Resources() {
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [loading, setLoading] = useState(true);
+  const resources = RESOURCES;
+  const loading = false;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function load() {
-      const { data } = await supabase.from('resources').select('*').order('sort_order');
-      if (data) {
-        setResources(data.map((r: Record<string, unknown>) => ({
-          id: r.id as string,
-          title: r.title as string,
-          category: r.category as string,
-          description: r.description as string,
-          url: r.url as string,
-          source: r.source as string,
-          body: r.body as string,
-          tags: r.tags as string[],
-        })));
-      }
-      setLoading(false);
-    }
-    load();
-  }, []);
-
-  const filtered = resources.filter(r => {
-    const matchesSearch = !searchQuery ||
-      r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory = selectedCategory === 'All' || r.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filtered = filterResources(resources, searchQuery, selectedCategory);
 
   const categories = ['All', ...Array.from(new Set(resources.map(r => r.category)))];
 

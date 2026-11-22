@@ -1,14 +1,7 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { useState } from 'react';
+import { FAQS, saveSuggestion } from '../data/colitisContent';
 import { Circle as HelpCircle, ChevronDown, Mail, MessageCircle, Send, Lightbulb, Bug, Sparkles, CircleCheck as CheckCircle, LifeBuoy, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router';
-
-interface FaqEntry {
-  id: string;
-  question: string;
-  answer: string;
-  category: string;
-}
 
 const supportContacts = [
   {
@@ -46,8 +39,8 @@ const suggestionCategories = [
 
 export default function HelpSupport() {
   const navigate = useNavigate();
-  const [faqs, setFaqs] = useState<FaqEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const faqs = FAQS;
+  const loading = false;
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
@@ -56,52 +49,30 @@ export default function HelpSupport() {
   const [feedbackTitle, setFeedbackTitle] = useState('');
   const [feedbackBody, setFeedbackBody] = useState('');
   const [feedbackCategory, setFeedbackCategory] = useState('feature');
-  const [feedbackContact, setFeedbackContact] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    async function load() {
-      const { data } = await supabase.from('faq_entries').select('*').order('sort_order');
-      if (data) {
-        setFaqs(data.map((f: Record<string, unknown>) => ({
-          id: f.id as string,
-          question: f.question as string,
-          answer: f.answer as string,
-          category: f.category as string,
-        })));
-      }
-      setLoading(false);
-    }
-    load();
-  }, []);
 
   const faqCategories = ['All', ...Array.from(new Set(faqs.map(f => f.category)))];
   const filteredFaqs = selectedCategory === 'All' ? faqs : faqs.filter(f => f.category === selectedCategory);
 
-  const handleSubmit = async () => {
-    if (!feedbackTitle.trim()) return;
-    setSubmitting(true);
-    try {
-      await supabase.from('suggestions').insert({
-        title: feedbackTitle.trim(),
-        body: feedbackBody.trim(),
-        category: feedbackCategory,
-        contact: feedbackContact.trim() || null,
-        status: 'new',
-      });
-      setSubmitted(true);
-      setFeedbackTitle('');
-      setFeedbackBody('');
-      setFeedbackContact('');
-      setTimeout(() => {
-        setSubmitted(false);
-        setShowFeedback(false);
-      }, 2500);
-    } catch {
-      // show error state
+  const handleSubmit = () => {
+    const saved = saveSuggestion({
+      title: feedbackTitle,
+      body: feedbackBody,
+      category: feedbackCategory,
+    });
+    if (!saved) {
+      setSaveError('This browser could not save the suggestion. Check device storage and try again.');
+      return;
     }
-    setSubmitting(false);
+    setSaveError('');
+    setSubmitted(true);
+    setFeedbackTitle('');
+    setFeedbackBody('');
+    window.setTimeout(() => {
+      setSubmitted(false);
+      setShowFeedback(false);
+    }, 2500);
   };
 
   return (
@@ -223,7 +194,7 @@ export default function HelpSupport() {
           Share Your Ideas
         </h3>
         <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
-          Got an idea to make Colitis Gourmet better? We'd love to hear it. Every suggestion is reviewed and helps shape future updates.
+          Suggestions are saved only in this browser on this device. They are not sent to us. Please do not include private medical information.
         </p>
 
         {!showFeedback ? (
@@ -239,9 +210,9 @@ export default function HelpSupport() {
             {submitted ? (
               <div className="text-center py-8">
                 <CheckCircle size={48} className="mx-auto mb-3 animate-glow-pulse" style={{ color: 'var(--safe)' }} />
-                <p className="font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Thank you!</p>
+                <p className="font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Saved on this device</p>
                 <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  Your idea has been received. We appreciate you helping us improve.
+                  Your suggestion is stored in this browser only. It has not been sent to Colitis support.
                 </p>
               </div>
             ) : (
@@ -292,27 +263,15 @@ export default function HelpSupport() {
                   />
                 </div>
 
-                <div>
-                  <label className="text-xs font-semibold mb-1 block" style={{ color: 'var(--text-muted)' }}>
-                    Email (optional — only if you want a reply)
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="your@email.com"
-                    value={feedbackContact}
-                    onChange={e => setFeedbackContact(e.target.value)}
-                    className="input-field"
-                  />
-                </div>
-
+                {saveError && <p className="text-sm" role="alert" style={{ color: 'var(--avoid)' }}>{saveError}</p>}
                 <div className="flex gap-2">
                   <button
                     onClick={handleSubmit}
-                    disabled={!feedbackTitle.trim() || submitting}
+                    disabled={!feedbackTitle.trim()}
                     className="flex-1 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send size={16} />
-                    {submitting ? 'Sending...' : 'Submit'}
+                    Save on this device
                   </button>
                   <button
                     onClick={() => setShowFeedback(false)}

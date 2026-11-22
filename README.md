@@ -30,3 +30,7 @@ If you are developing a production application, we recommend enabling type-aware
 ```
 
 See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+
+## Data and privacy model
+
+Colitis Gourmet Planner is local-first and does not require a Supabase project or customer account. Meal plans, shopping lists, profile preferences, and saved feedback suggestions are stored in browser/device local storage. They are not synced to a Colitis backend. FAQs and health resources are bundled with the app for offline availability. External support links require internet access. Clearing browser/app storage can remove locally saved data. The planner is an organiser and does not replace individual medical or dietetic advice.
