@@ -1,0 +1,31 @@
+name: Publish verified Android beta APK
+on:
+  push:
+    tags:
+      - 'android-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and verify signed Expo APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          curl --fail --location --retry 3 --silent --show-error 'https://expo.dev/artifacts/eas/AT1CB0naTKirs8dgmcZDtfpsqAzsLIG22HdxmP75tL0.apk' --output 'release/Colitis-Gourmet-Planner-v1.0.0-beta.apk'
+          echo '4ec25a4268be79da717adfdafc98b663491f97e8a0bdb6cf0b023d9232775af7  release/Colitis-Gourmet-Planner-v1.0.0-beta.apk' | sha256sum --check --status
+          test "$(stat -c%s 'release/Colitis-Gourmet-Planner-v1.0.0-beta.apk')" -gt 1000000
+          echo 'APK downloaded and SHA256 verified'
+      - name: Publish GitHub public prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "${GITHUB_REF_NAME}" 'release/Colitis-Gourmet-Planner-v1.0.0-beta.apk' --title 'Colitis Gourmet Planner 1.0.0 beta' --notes-file '.github/release-notes/android-beta.md' --prerelease --verify-tag
